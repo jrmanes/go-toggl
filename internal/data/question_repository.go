@@ -2,10 +2,9 @@ package data
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/jrmanes/go-toggl/pkg/question"
-	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 // QuestionRepository will be a bridge to data which will give us access to DBs
@@ -16,10 +15,14 @@ type QuestionRepository struct {
 // GetAll implement a question repository against infrastructure
 func (qu *QuestionRepository) GetAll(ctx context.Context) ([]question.Question, error) {
 	q := `
-	SELECT Q.id, 
-	       Q.body
-		FROM questions AS Q
-		GROUP BY Q.id;
+		SELECT DISTINCT Q.id,
+		       Q.body,
+		        array(
+		           SELECT DISTINCT ROW (body, correct)
+		           FROM "options"
+		         ) as "options"
+		FROM questions AS Q, "options" AS O
+		GROUP BY Q.id, O.id;
 	`
 
 	rows, err := qu.Data.DB.QueryContext(ctx, q)
@@ -31,27 +34,25 @@ func (qu *QuestionRepository) GetAll(ctx context.Context) ([]question.Question, 
 
 	var questions []question.Question
 
-	// reorder tags on array
 	for rows.Next() {
-		var q question.Question
-		//var tagsArray []string
-		rows.Scan(&q.ID, &q.Body, pq.Array(&q.Options))
-		fmt.Println(q.ID)
-		// split values into an array
+		//var q question.Question
+		//var tagsArray question.
+		//rows.Scan(&q.ID, &q.Body, pq.Array(&q.Options))
+		//fmt.Println(q)
+		//// split values into an array
 		//for i := range q.Options {
 		//	tagsArray = strings.Split(q.Options[i].Body, ", ")
 		//}
 		//
 		//// convert original array into the new separated one
-		//q.Options = tagsArray
-
-		// in the following line, we provide the time since the offer was created
-
-		questions = append(questions, q)
+		//q.Options.Body = tagsArray
+		//
+		//// in the following line, we provide the time since the question was created
+		//
+		//questions = append(questions, q)
 	}
 	return questions, nil
 }
-
 
 // Create adds a new question.
 func (qu *QuestionRepository) Create(ctx context.Context, q *question.Question) error {
@@ -96,6 +97,51 @@ func (qu *QuestionRepository) Create(ctx context.Context, q *question.Question) 
 	return nil
 }
 
+// Update updates a question by id.
+func (qu *QuestionRepository) Update(ctx context.Context, id uint, q question.Question) error {
+	queryUpdate := `
+	UPDATE questions set body=$1
+	WHERE id=$2
+	RETURNING id;
+	`
+
+	stmt, err := qu.Data.DB.PrepareContext(ctx, queryUpdate)
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(
+		ctx, q.Body, id,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Delete removes a question by id.
+func (qu *QuestionRepository) Delete(ctx context.Context, id uint) error {
+	q := `DELETE FROM questions WHERE id=$1;`
+
+	stmt, err := qu.Data.DB.PrepareContext(ctx, q)
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// getLastID assert function to get the last id inserted
 func (qu *QuestionRepository) getLastID() int {
 	var id int
 
