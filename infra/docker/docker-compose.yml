@@ -1,0 +1,23 @@
+version: '3.3'
+services:
+  go-toggl-postgres:
+    image: postgres:11
+    container_name: go-toggldb_postgres
+    environment:
+      - POSTGRES_USER=go-toggl
+      - POSTGRES_PASSWORD=go-toggl
+      - POSTGRES_DB=go-toggl
+      - DATABASE_HOST=go-toggl
+    ports:
+      - '5432:5432'
+    volumes:
+      - go-toggl_database_postgres:/var/lib/postgresql/data
+    networks:
+      - go-toggl
+
+volumes:
+  go-toggl_database_postgres:
+
+networks:
+  go-toggl:
+    driver: bridge

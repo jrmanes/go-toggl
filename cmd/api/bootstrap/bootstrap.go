@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/jrmanes/go-toggl/internal/data"
 	"github.com/jrmanes/go-toggl/internal/server"
+	_ "github.com/lib/pq"
 )
 
 func init() {
@@ -41,6 +42,6 @@ func Run() error {
 
 	// Attempt a graceful shutdown.
 	//serv.Close()
-	//data.Close()
+	data.Close()
 	return err
 }

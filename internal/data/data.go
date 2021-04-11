@@ -3,8 +3,6 @@ package data
 import (
 	"database/sql"
 	"log"
-	"os"
-	"strconv"
 	"sync"
 )
 
@@ -27,28 +25,34 @@ func New() *Data {
 
 // initialize the data variable with the connection to the database.
 func initDB() {
-	dbName := os.Getenv("DATABASE_NAME")
-
 	log.Println("Testing connection against database...")
-	db, err := getConnection(dbName)
+	db, err := getConnection()
 	if err != nil {
 		log.Panic(err)
 	}
 
 	// get the value from .env file, if true, execute migrations
-	databaseMigrations := os.Getenv("DATABASE_MIGRATIONS")
-	migrate, _ := strconv.ParseBool(databaseMigrations)
-	if migrate {
-		log.Println("Creating migrations on database...")
-		MakeMigration(db)
-		//if err != nil {
-		//	log.Panic(err)
-		//}
-	} else {
-		log.Println("no apply migrations")
-	}
+	//databaseMigrations := os.Getenv("DATABASE_MIGRATIONS")
+	//migrate, _ := strconv.ParseBool(databaseMigrations)
+	//if migrate {
+	//	log.Println("Creating migrations on database...")
+	//	MakeMigration(db)
+	//	//if err != nil {
+	//	//	log.Panic(err)
+	//	//}
+	//}
 
 	data = &Data{
 		DB: db,
 	}
 }
+
+// Close closes the resources used by data.
+func Close() error {
+	if data == nil {
+		return nil
+	}
+
+	return data.DB.Close()
+}
+

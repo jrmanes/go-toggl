@@ -6,5 +6,5 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v1.5.4
 	github.com/joho/godotenv v1.3.0
-	github.com/mattn/go-sqlite3 v1.14.6
+	github.com/lib/pq v1.10.0
 )

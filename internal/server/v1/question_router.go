@@ -19,6 +19,7 @@ func (qu *QuestionRouter) Routes() http.Handler {
 	// methods
 	r.Get("/", qu.GetAllHandler)
 	r.Post("/", qu.CreateHandler)
+	//r.Put("/", qu.CreateHandler)
 
 	return r
 }
