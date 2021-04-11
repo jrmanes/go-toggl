@@ -169,7 +169,7 @@ DELETE
 ## Setup the project
 
 
-In order to make it easy, there is a Makefile with different acctions, to start the project, just execute:
+In order to make it easy, there is a Makefile with different actions, to start the project, just execute:
 ```Makefile
 make setup_project
 ```
