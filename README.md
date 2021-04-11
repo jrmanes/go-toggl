@@ -160,6 +160,8 @@ DELETE
 - [X] JWT authentication mechanism
 
   Clients are required to send a JSON Web Token that identifies the user in some way. The API returns only questions that belong to the authenticated user. Endpoint for generating tokens is not needed, we can generate them through [jwt.io](https://jwt.io/).
+  
+  In order to test the endpoints with authentications, use the secret store in this [line]().
 
 - [ ] Use GraphQL instead of REST to implement the API
 

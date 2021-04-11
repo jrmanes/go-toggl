@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
+	"github.com/jrmanes/go-toggl/internal/middleware"
 	"github.com/jrmanes/go-toggl/pkg/question"
 	"github.com/jrmanes/go-toggl/pkg/response"
 )
@@ -17,10 +18,15 @@ type QuestionRouter struct {
 func (qu *QuestionRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
-	r.Get("/", qu.GetAllHandler)
-	r.Post("/", qu.CreateHandler)
-	r.Put("/{id}", qu.UpdateHandler)
-	r.Delete("/{id}", qu.DeleteHandler)
+	// Set JWT middleware to validate requests
+	r.With(middleware.Authorizator).
+		Get("/", qu.GetAllHandler)
+	r.With(middleware.Authorizator).
+		Post("/", qu.CreateHandler)
+	r.With(middleware.Authorizator).
+		Put("/", qu.UpdateHandler)
+	r.With(middleware.Authorizator).
+		Delete("/", qu.DeleteHandler)
 
 	return r
 }
