@@ -17,7 +17,7 @@ func New() http.Handler {
 			Data: data.New(),
 		},
 	}
-	r.Mount("/", qu.Routes())
+	r.Mount("/q", qu.Routes())
 
 	return r
 }
