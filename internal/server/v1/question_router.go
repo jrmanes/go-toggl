@@ -89,7 +89,6 @@ func (qu *QuestionRouter) UpdateHandler(w http.ResponseWriter, r *http.Request) 
 	response.JSON(w, r, http.StatusOK, response.Map{"question": q})
 }
 
-
 // Delete a quetion using the id
 func (qu *QuestionRouter) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id") // in order to use chi library: https://github.com/go-chi/chi

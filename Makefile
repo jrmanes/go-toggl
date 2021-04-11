@@ -11,6 +11,8 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
+all: setup_project migrate_up
+
 ### ### ### ### ### ### ### ### ###
 # DATABASE MIGRATIONS
 ### ### ### ### ### ### ### ### ###
@@ -37,5 +39,5 @@ setup_sqlite:
 ### ### ### ### ### ### ### ### ###
 ### ### ### D O C K E R ### ### ###
 ### ### ### ### ### ### ### ### ###
-setup_infra:
+setup_project:
 	docker-compose -f ./infra/docker/docker-compose.yml up

@@ -14,6 +14,23 @@ services:
       - go-toggl_database_postgres:/var/lib/postgresql/data
     networks:
       - go-toggl
+  go-toggl-api:
+    env_file:
+      - ../../.env
+    container_name: go-toggl-api
+    build:
+      context: ../../
+      dockerfile: ./Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - PORT=3000
+      - DATABASE_URI=postgres://go-toggl:go-toggl@go-toggl-postgres:5432/go-toggl?&sslmode=disable
+    restart: on-failure
+    depends_on:
+      - go-toggl-postgres
+    networks:
+      - go-toggl
 
 volumes:
   go-toggl_database_postgres:

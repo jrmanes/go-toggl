@@ -26,7 +26,6 @@ func Run() error {
 	}
 
 	port := os.Getenv("SERVER_PORT")
-	log.Println("port is", port)
 	serv, err := server.New(port)
 	if err != nil {
 		log.Fatal(err)

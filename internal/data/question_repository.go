@@ -56,13 +56,13 @@ func (qu *QuestionRepository) GetAll(ctx context.Context) ([]question.Question, 
 
 // Create adds a new question.
 func (qu *QuestionRepository) Create(ctx context.Context, q *question.Question) error {
-	query := `
+	queryCreate := `
 	INSERT INTO questions (body)
 	VALUES ($1)
 	RETURNING id;
 	`
 
-	stmt, err := qu.Data.DB.PrepareContext(ctx, query)
+	stmt, err := qu.Data.DB.PrepareContext(ctx, queryCreate)
 	if err != nil {
 		return err
 	}
@@ -112,9 +112,49 @@ func (qu *QuestionRepository) Update(ctx context.Context, id uint, q question.Qu
 
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(
-		ctx, q.Body, id,
-	)
+	_, err = stmt.ExecContext(ctx, q.Body, id)
+	if err != nil {
+		return err
+	}
+
+	// Clean up all the options
+	qu.DeleteFromOptions(ctx, id)
+
+	//create a loop in order to add the tags into the tags table
+	for i := 0; i < len(q.Options); i++ {
+		queryInsertIntoOptions := `
+		INSERT INTO options (id, body, correct)
+		VALUES ((select id from questions where id=$1), $2, $3);
+		`
+		stmt, err := qu.Data.DB.PrepareContext(ctx, queryInsertIntoOptions)
+		if err != nil {
+			return err
+		}
+
+		defer stmt.Close()
+
+		_, err = stmt.ExecContext(ctx, id, q.Options[i].Body, q.Options[i].Correct)
+		if err != nil {
+			return err
+		}
+	}
+
+
+	return nil
+}
+
+// Delete removes a question by id.
+func (qu *QuestionRepository) Delete(ctx context.Context, id uint) error {
+	queryDelete := `DELETE FROM questions WHERE id=$1;`
+
+	stmt, err := qu.Data.DB.PrepareContext(ctx, queryDelete)
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -122,11 +162,11 @@ func (qu *QuestionRepository) Update(ctx context.Context, id uint, q question.Qu
 	return nil
 }
 
-// Delete removes a question by id.
-func (qu *QuestionRepository) Delete(ctx context.Context, id uint) error {
-	q := `DELETE FROM questions WHERE id=$1;`
+// DeleteFromOptions removes a question by id.
+func (qu *QuestionRepository) DeleteFromOptions(ctx context.Context, id uint) error {
+	queryDeleteFromOptions := `DELETE FROM "options" WHERE id=$1;`
 
-	stmt, err := qu.Data.DB.PrepareContext(ctx, q)
+	stmt, err := qu.Data.DB.PrepareContext(ctx, queryDeleteFromOptions)
 	if err != nil {
 		return err
 	}
@@ -147,7 +187,8 @@ func (qu *QuestionRepository) getLastID() int {
 
 	query := `
 	SELECT MAX(id) AS id
-	FROM questions`
+	FROM questions
+	`
 
 	err := qu.Data.DB.QueryRow(query).Scan(&id)
 	if err != nil {
