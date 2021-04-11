@@ -175,7 +175,7 @@ make setup_project
 ```
 
 ### Apply migrations to database
-In order to create the first schema of the database, just execute:
+In order to create the **first schema** of the database, just execute:
 ```Makefile
 make migrate_up
 ```
