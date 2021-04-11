@@ -13,9 +13,9 @@ endif
 
 all: setup_project migrate_up
 
-### ### ### ### ### ### ### ### ###
-# DATABASE MIGRATIONS
-### ### ### ### ### ### ### ### ###
+### ### ### ### ### ### ### ### ### ###
+# D A T A B A S E  M I G R A T I O N S
+### ### ### ### ### ### ### ### ### ###
 # source: https://github.com/golang-migrate/migrate/blob/master/database/postgres/TUTORIAL.md
 migrate_init:
 	docker run -v ${DIR_MIGRATIONS}:/migrations --network ${DOCKER_NETWORK} migrate/migrate -path=/migrations/ \
