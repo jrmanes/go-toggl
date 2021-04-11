@@ -55,4 +55,3 @@ func Close() error {
 
 	return data.DB.Close()
 }
-

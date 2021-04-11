@@ -47,7 +47,6 @@ func (qu *QuestionRouter) CreateHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-
 	defer r.Body.Close()
 
 	ctx := r.Context()

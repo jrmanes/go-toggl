@@ -139,7 +139,6 @@ func (qu *QuestionRepository) Update(ctx context.Context, id uint, q question.Qu
 		}
 	}
 
-
 	return nil
 }
 
