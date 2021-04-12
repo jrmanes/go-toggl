@@ -3,6 +3,7 @@
 DIR := ${CURDIR}
 DIR_MIGRATIONS := "${DIR}/internal/data/db/migrations"
 DOCKER_NETWORK=host
+DOCKER_PROJECT=go-toggl
 #### #### #### #### #### #### ####
 
 # Load .env in order to use vars
@@ -41,3 +42,7 @@ setup_sqlite:
 ### ### ### ### ### ### ### ### ###
 setup_project:
 	docker-compose -f ./infra/docker/docker-compose.yml up
+
+docker_build_tag_push:
+	docker build -t jrmanes/${DOCKER_PROJECT}:latest .
+	docker push jrmanes/$(DOCKER_PROJECT):latest
