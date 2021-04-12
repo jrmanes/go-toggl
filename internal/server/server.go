@@ -47,3 +47,8 @@ func (serv *Server) Start() {
 	log.Printf("Server running on http://localhost%s", serv.server.Addr)
 	log.Fatal(serv.server.ListenAndServe())
 }
+
+// Close server resources.
+func (serv *Server) Close() error {
+	return nil
+}

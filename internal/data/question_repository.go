@@ -14,15 +14,39 @@ type QuestionRepository struct {
 
 // GetAll implement a question repository against infrastructure
 func (qu *QuestionRepository) GetAll(ctx context.Context) ([]question.Question, error) {
+	//q := `
+	//	SELECT DISTINCT Q.id,
+	//	       Q.body,
+	//	        array(
+	//	           SELECT DISTINCT ROW (body, correct)
+	//	           FROM "options"
+	//	         ) as "options"
+	//	FROM questions AS Q, "options" AS O
+	//	GROUP BY Q.id, O.id;
+	//`
 	q := `
-		SELECT DISTINCT Q.id,
-		       Q.body,
-		        array(
-		           SELECT DISTINCT ROW (body, correct)
-		           FROM "options"
-		         ) as "options"
-		FROM questions AS Q, "options" AS O
-		GROUP BY Q.id, O.id;
+	SELECT DISTINCT Q.id,
+		   Q.body,
+		   (
+			   SELECT ARRAY (
+				   SELECT  body
+				   FROM options
+				   WHERE options.id = Q.id
+			  )
+		   ) AS "options_body",
+		   (
+			   SELECT ARRAY (
+				   SELECT  correct
+				   FROM options
+				   WHERE options.id = Q.id
+			  )
+		   ) AS "options_correct"
+	FROM questions AS Q
+			 INNER JOIN "options"
+						ON Q.id = options.id
+	GROUP BY Q.id, options.body, Q.body, Q.id, options.correct
+	ORDER BY Q.id
+	;
 	`
 
 	rows, err := qu.Data.DB.QueryContext(ctx, q)
@@ -33,24 +57,31 @@ func (qu *QuestionRepository) GetAll(ctx context.Context) ([]question.Question, 
 	defer rows.Close()
 
 	var questions []question.Question
-
 	for rows.Next() {
-		//var q question.Question
-		//var tagsArray question.
-		//rows.Scan(&q.ID, &q.Body, pq.Array(&q.Options))
-		//fmt.Println(q)
-		//// split values into an array
-		//for i := range q.Options {
-		//	tagsArray = strings.Split(q.Options[i].Body, ", ")
-		//}
-		//
-		//// convert original array into the new separated one
-		//q.Options.Body = tagsArray
-		//
-		//// in the following line, we provide the time since the question was created
-		//
-		//questions = append(questions, q)
+		var qu question.Question
+		rows.Scan(&qu.ID, &qu.Body)
+
+		questions = append(questions, qu)
 	}
+
+	//
+	//for rows.Next() {
+	//
+	//	rows.Scan(&qu.o.UUID, &o.OfferName, &o.CompanyName, &o.Description, &o.Salary, &o.Location, pq.Array(&o.Tags), &o.CreatedAt, &o.UpdatedAt, &o.CompanyUUID)
+	//
+	//	// split values into an array
+	//	for i := range o.Tags {
+	//		tagsArray = strings.Split(o.Tags[i], ", ")
+	//	}
+	//
+	//	// convert original array into the new separated one
+	//	o.Tags = tagsArray
+	//
+	//	// in the following line, we provide the time since the offer was created
+	//	o.TimeSince = ShortDur(time.Since(o.CreatedAt))
+	//
+	//	offers = append(offers, o)
+	//}
 	return questions, nil
 }
 

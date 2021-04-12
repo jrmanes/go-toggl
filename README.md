@@ -135,6 +135,7 @@ Your solution should meet all these requirements.
 - [X] Endpoint that allows to add a new question
 - [X] Endpoint that allows to update an existing question
 - [X] Question data is stored in a SQLite database with a **normalised** schema
+
   Use **PostgreSQL** with [migrations](https://github.com/jrmanes/go-toggl/tree/main/internal/data/db/migrations)
   Running in a [docker-compose](https://github.com/jrmanes/go-toggl/blob/main/infra/docker/docker-compose.yml)
 - [X] The order of questions and options is stable, not random
