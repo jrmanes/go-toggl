@@ -13,6 +13,10 @@ type Question struct {
 		Correct bool   `json:"correct"`
 	} `json:"options,omitempty"`
 }
+type Options struct {
+	Body    string  `json:"body"`
+	Correct []uint8 `json:"correct"`
+}
 
 // Questions is an array of Question structs
 type Questions []Question

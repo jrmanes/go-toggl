@@ -2,6 +2,9 @@ package data
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"strconv"
 
 	"github.com/jrmanes/go-toggl/pkg/question"
 	_ "github.com/lib/pq"
@@ -12,18 +15,9 @@ type QuestionRepository struct {
 	Data *Data
 }
 
+// TODO: Pending to generate the array of options to return it when get all data
 // GetAll implement a question repository against infrastructure
 func (qu *QuestionRepository) GetAll(ctx context.Context) ([]question.Question, error) {
-	//q := `
-	//	SELECT DISTINCT Q.id,
-	//	       Q.body,
-	//	        array(
-	//	           SELECT DISTINCT ROW (body, correct)
-	//	           FROM "options"
-	//	         ) as "options"
-	//	FROM questions AS Q, "options" AS O
-	//	GROUP BY Q.id, O.id;
-	//`
 	q := `
 	SELECT DISTINCT Q.id,
 		   Q.body,
@@ -45,8 +39,7 @@ func (qu *QuestionRepository) GetAll(ctx context.Context) ([]question.Question, 
 			 INNER JOIN "options"
 						ON Q.id = options.id
 	GROUP BY Q.id, options.body, Q.body, Q.id, options.correct
-	ORDER BY Q.id
-	;
+	ORDER BY Q.id;
 	`
 
 	rows, err := qu.Data.DB.QueryContext(ctx, q)
@@ -59,29 +52,50 @@ func (qu *QuestionRepository) GetAll(ctx context.Context) ([]question.Question, 
 	var questions []question.Question
 	for rows.Next() {
 		var qu question.Question
-		rows.Scan(&qu.ID, &qu.Body)
+		var op question.Options
+
+		err := rows.Scan(&qu.ID, &qu.Body, &op.Body, &op.Correct)
+		if err != nil {
+			log.Fatal(err)
+		}
+		var body string = op.Body
+		for _, field := range split(body, '{') {
+			for _, field2 := range split(field, ',') {
+				for _, field3 := range split(field2, '}') {
+					fmt.Println(field3)
+					//qu.Options[0].Body = field3
+					//questions = append(questions, qu)
+				}
+			}
+		}
+		for i := 0; i < (len(op.Correct)); i++ {
+			for _, field := range split(string(op.Correct[i]), '{') {
+				for _, field2 := range split(field, ',') {
+					for _, field3 := range split(field2, '}') {
+						if field3 == "t" {
+							field3 = "true"
+						}
+						if field3 == "" {
+							field3 = "false"
+						}
+						correct, err := strconv.ParseBool(field3)
+						if err != nil {
+							log.Fatal("error parse bool", err)
+						}
+						fmt.Println(correct)
+
+						//qu.Options[0].Body = append(qu.Options, &op.{body: field3})
+						//qu.Options[0].Body = field3
+						//questions = append(questions, qu)
+
+					}
+				}
+			}
+		}
 
 		questions = append(questions, qu)
 	}
 
-	//
-	//for rows.Next() {
-	//
-	//	rows.Scan(&qu.o.UUID, &o.OfferName, &o.CompanyName, &o.Description, &o.Salary, &o.Location, pq.Array(&o.Tags), &o.CreatedAt, &o.UpdatedAt, &o.CompanyUUID)
-	//
-	//	// split values into an array
-	//	for i := range o.Tags {
-	//		tagsArray = strings.Split(o.Tags[i], ", ")
-	//	}
-	//
-	//	// convert original array into the new separated one
-	//	o.Tags = tagsArray
-	//
-	//	// in the following line, we provide the time since the offer was created
-	//	o.TimeSince = ShortDur(time.Since(o.CreatedAt))
-	//
-	//	offers = append(offers, o)
-	//}
 	return questions, nil
 }
 
@@ -226,4 +240,23 @@ func (qu *QuestionRepository) getLastID() int {
 	}
 
 	return id
+}
+
+// split return divided strings
+func split(tosplit string, sep rune) []string {
+	var fields []string
+
+	last := 0
+	for i, c := range tosplit {
+		if c == sep {
+			// Found the separator, append a slice
+			fields = append(fields, string(tosplit[last:i]))
+			last = i + 1
+		}
+	}
+
+	// last field
+	fields = append(fields, string(tosplit[last:]))
+
+	return fields
 }
