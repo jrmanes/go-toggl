@@ -2,10 +2,10 @@ package data
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strconv"
 
+	kit "github.com/jrmanes/go-toggl/internal/data/db/kit"
 	"github.com/jrmanes/go-toggl/pkg/question"
 	_ "github.com/lib/pq"
 )
@@ -16,6 +16,7 @@ type QuestionRepository struct {
 }
 
 // TODO: Pending to generate the array of options to return it when get all data
+
 // GetAll implement a question repository against infrastructure
 func (qu *QuestionRepository) GetAll(ctx context.Context) ([]question.Question, error) {
 	q := `
@@ -36,8 +37,8 @@ func (qu *QuestionRepository) GetAll(ctx context.Context) ([]question.Question, 
 			  )
 		   ) AS "options_correct"
 	FROM questions AS Q
-			 INNER JOIN "options"
-						ON Q.id = options.id
+		INNER JOIN "options"
+		ON Q.id = options.id
 	GROUP BY Q.id, options.body, Q.body, Q.id, options.correct
 	ORDER BY Q.id;
 	`
@@ -59,35 +60,37 @@ func (qu *QuestionRepository) GetAll(ctx context.Context) ([]question.Question, 
 			log.Fatal(err)
 		}
 		var body string = op.Body
-		for _, field := range split(body, '{') {
-			for _, field2 := range split(field, ',') {
-				for _, field3 := range split(field2, '}') {
-					fmt.Println(field3)
-					//qu.Options[0].Body = field3
-					//questions = append(questions, qu)
+		// Access to the values body from the databse
+		for _, field := range kit.Split(body, '{') {
+			for _, field2 := range kit.Split(field, ',') {
+				for _, field3 := range kit.Split(field2, '}') {
+					//fmt.Println(field3)
+					// construct the array here
+					op.Body = field3
+					//qu.Options = append(qu.Options, op.Body)
 				}
 			}
 		}
+
+		// Access to the values correct from the database
 		for i := 0; i < (len(op.Correct)); i++ {
-			for _, field := range split(string(op.Correct[i]), '{') {
-				for _, field2 := range split(field, ',') {
-					for _, field3 := range split(field2, '}') {
+			for _, field := range kit.Split(string(op.Correct[i]), '{') {
+				for _, field2 := range kit.Split(field, ',') {
+					for _, field3 := range kit.Split(field2, '}') {
 						if field3 == "t" {
 							field3 = "true"
 						}
 						if field3 == "" {
 							field3 = "false"
 						}
-						correct, err := strconv.ParseBool(field3)
+						//correct, err := strconv.ParseBool(field3)
+						_, err := strconv.ParseBool(field3)
 						if err != nil {
 							log.Fatal("error parse bool", err)
 						}
-						fmt.Println(correct)
-
-						//qu.Options[0].Body = append(qu.Options, &op.{body: field3})
-						//qu.Options[0].Body = field3
-						//questions = append(questions, qu)
-
+						//fmt.Println(correct)
+						// construct the array here
+						//qu.Options[0].Correct = correct
 					}
 				}
 			}
@@ -240,23 +243,4 @@ func (qu *QuestionRepository) getLastID() int {
 	}
 
 	return id
-}
-
-// split return divided strings
-func split(tosplit string, sep rune) []string {
-	var fields []string
-
-	last := 0
-	for i, c := range tosplit {
-		if c == sep {
-			// Found the separator, append a slice
-			fields = append(fields, string(tosplit[last:i]))
-			last = i + 1
-		}
-	}
-
-	// last field
-	fields = append(fields, string(tosplit[last:]))
-
-	return fields
 }
